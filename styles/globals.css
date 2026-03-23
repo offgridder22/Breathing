@@ -149,7 +149,6 @@ nav {
   top: 0;
   left: 0;
   right: 0;
-<<<<<<< HEAD
   height: max(130%, 62.5vw);
   z-index: 1;
   -webkit-mask-image: linear-gradient(to bottom, black 75%, transparent 100%);
@@ -165,12 +164,6 @@ nav {
   .hero-bg--ocean {
     height: 37%;
   }
-=======
-  bottom: -200px;
-  z-index: 1;
-  -webkit-mask-image: linear-gradient(to bottom, black 66%, black 50%, transparent 80%);
-  mask-image: linear-gradient(to bottom,  black 66%, black 50%, transparent 90%);
->>>>>>> 30dd552 (resolve conflit)
 }
 
 .hero-content {
