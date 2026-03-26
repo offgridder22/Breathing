@@ -65,6 +65,7 @@ export default function WindyLandscape({ src, style, className, aspectRatio = 0,
 
     const gl = canvas.getContext('webgl', {
       alpha: true,
+      premultipliedAlpha: false,
       antialias: false,
       powerPreference: 'low-power',
     });
@@ -135,7 +136,7 @@ export default function WindyLandscape({ src, style, className, aspectRatio = 0,
       const parent = canvas.parentElement;
       if (!parent) return;
       const { width } = parent.getBoundingClientRect();
-      const dpr = Math.min(window.devicePixelRatio || 1, 1);
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
       let aspect;
       const dynamicAspect = 1.0 + Math.pow(Math.max(0, (width - 400) / 1600), 0.47) * 0.8;
       if (width < 1025) {
@@ -162,11 +163,23 @@ export default function WindyLandscape({ src, style, className, aspectRatio = 0,
       imgW = img.naturalWidth;
       imgH = img.naturalHeight;
 
+      // Downscale if image exceeds MAX_TEXTURE_SIZE (e.g. ocean.png is 5000px wide)
+      const maxSize = gl.getParameter(gl.MAX_TEXTURE_SIZE);
+      let source = img;
+      if (imgW > maxSize || imgH > maxSize) {
+        const scale = Math.min(maxSize / imgW, maxSize / imgH);
+        const oc = document.createElement('canvas');
+        oc.width  = Math.floor(imgW * scale);
+        oc.height = Math.floor(imgH * scale);
+        oc.getContext('2d').drawImage(img, 0, 0, oc.width, oc.height);
+        source = oc;
+      }
+
       texture = gl.createTexture();
       gl.bindTexture(gl.TEXTURE_2D, texture);
       // Flip Y so UV (0,0) = bottom of image (ground level)
       gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
-      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, img);
+      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, source);
       gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
       gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
       gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);

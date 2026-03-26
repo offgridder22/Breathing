@@ -3,26 +3,42 @@
 import { useEffect, useRef } from 'react';
 
 const WAVE_COUNT = 9;
-const WAVE_SPEED = 0.38;
-const MAX_RADIUS_FACTOR = 0.72;
-const LINE_WIDTH_BASE = 1.1;
+const MAX_RADIUS_FACTOR = 0.78;
+const LINE_WIDTH_BASE = 0.4;
 
-function getWaveColor(scene, alpha) {
-  const palettes = {
-    dawn:   `rgba(160,180,195,${alpha})`,
-    forest: `rgba(80,140,100,${alpha})`,
-    ocean:  `rgba(60,140,200,${alpha})`,
-    dusk:   `rgba(200,130,80,${alpha})`,
+// speed = px/frame at 30fps | alpha = max opacity | dir: +1 expand, -1 contract
+const PHASE_CONFIG = {
+  '':     { speed: 0.50, alpha: 0.38, dir:  1.0 }, // idle — ambient slow loop
+  inhale: { speed: 0.28, alpha: 0.58, dir:  1.0 }, // expand outward
+  hold:   { speed: 0.03, alpha: 0.32, dir:  1.0 }, // almost still
+  exhale: { speed: 0.22, alpha: 0.48, dir: -1.0 }, // contract inward
+  rest:   { speed: 0.05, alpha: 0.22, dir:  1.0 }, // settle, near silence
+};
+
+function waveColor(scene, alpha) {
+  const p = {
+    dawn:   '160,180,195',
+    forest: '80,140,100',
+    ocean:  '60,140,200',
+    dusk:   '200,130,80',
   };
-  return palettes[scene];
+  return `rgba(${p[scene] ?? p.dawn},${alpha})`;
 }
 
-export default function WaveCanvas({ scene }) {
+export default function WaveCanvas({ scene, phase }) {
   const canvasRef = useRef(null);
-  const wavesRef = useRef([]);
-  const rafRef = useRef(0);
-  const sceneRef = useRef(scene);
+  const wavesRef  = useRef([]);
+  const rafRef    = useRef(0);
+  const sceneRef  = useRef(scene);
+  const phaseRef  = useRef(phase ?? '');
+
+  // Smoothly interpolated runtime state
+  const speedRef = useRef(PHASE_CONFIG[''].speed);
+  const alphaRef = useRef(PHASE_CONFIG[''].alpha);
+  const dirRef   = useRef(PHASE_CONFIG[''].dir);
+
   sceneRef.current = scene;
+  phaseRef.current = phase ?? '';
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -31,59 +47,74 @@ export default function WaveCanvas({ scene }) {
     if (!ctx) return;
 
     function initWaves() {
-      if (!canvas) return;
       const section = canvas.parentElement;
-      canvas.width = section?.offsetWidth || window.innerWidth;
+      canvas.width  = section?.offsetWidth  || window.innerWidth;
       canvas.height = section?.offsetHeight || window.innerHeight;
       const maxR = Math.hypot(canvas.width, canvas.height) * 0.5 * MAX_RADIUS_FACTOR;
       const gap = maxR / WAVE_COUNT;
-      wavesRef.current = [];
-      for (let i = 0; i < WAVE_COUNT; i++) {
-        wavesRef.current.push({ r: i * gap, maxR, phase: i / WAVE_COUNT });
-      }
+      wavesRef.current = Array.from({ length: WAVE_COUNT }, (_, i) => ({
+        r: i * gap,
+        maxR,
+      }));
     }
-
-    function draw() {
-      if (!canvas || !ctx) return;
-      const W = canvas.width, H = canvas.height;
-      const cx = W / 2, cy = H / 2;
-      ctx.clearRect(0, 0, W, H);
-      const maxR = Math.hypot(W, H) * 0.5 * MAX_RADIUS_FACTOR;
-      wavesRef.current.forEach(wave => {
-        wave.r += WAVE_SPEED;
-        if (wave.r > maxR) wave.r = 0;
-        const progress = wave.r / maxR;
-        let alpha = 0.32;
-        if (progress < 0.08) alpha = progress / 0.08 * 0.32;
-        else if (progress > 0.72) alpha = (1 - (progress - 0.72) / 0.28) * 0.32;
-        alpha = Math.max(0, alpha);
-        const lw = LINE_WIDTH_BASE * (1 - progress * 0.6);
-        ctx.beginPath();
-        ctx.arc(cx, cy, wave.r, 0, Math.PI * 2);
-        ctx.strokeStyle = getWaveColor(sceneRef.current, alpha);
-        ctx.lineWidth = lw;
-        ctx.stroke();
-      });
-      rafRef.current = requestAnimationFrame(draw);
-    }
-
-    initWaves();
 
     let lastFrame = 0;
-    const FRAME_INTERVAL = 1000 / 30; // 30fps
+    const FRAME_INTERVAL = 1000 / 30;
+
     function loop(ts) {
       rafRef.current = requestAnimationFrame(loop);
       if (ts - lastFrame < FRAME_INTERVAL) return;
       lastFrame = ts;
-      draw();
+
+      const key = phaseRef.current in PHASE_CONFIG ? phaseRef.current : '';
+      const cfg = PHASE_CONFIG[key];
+
+      // Lerp all parameters toward target for fluid organic transitions
+      speedRef.current += (cfg.speed - speedRef.current) * 0.05;
+      alphaRef.current += (cfg.alpha - alphaRef.current) * 0.05;
+      dirRef.current   += (cfg.dir   - dirRef.current)   * 0.04;
+
+      const W = canvas.width, H = canvas.height;
+      const cx = W / 2, cy = H / 2;
+      ctx.clearRect(0, 0, W, H);
+
+      const maxR     = Math.hypot(W, H) * 0.5 * MAX_RADIUS_FACTOR;
+      const velocity = speedRef.current * dirRef.current;
+      const maxAlpha = alphaRef.current;
+
+      wavesRef.current.forEach(wave => {
+        wave.r += velocity;
+
+        // Wrap: expanding waves restart from center, contracting from edge
+        if (velocity >= 0 && wave.r > maxR) wave.r = 0;
+        if (velocity <  0 && wave.r < 0)   wave.r = maxR;
+
+        const progress = Math.max(0, Math.min(1, wave.r / maxR));
+
+        // Soft fade in from center, fade out toward edge
+        let a = maxAlpha;
+        if (progress < 0.05)      a = (progress / 0.05) * maxAlpha;
+        else if (progress > 0.82) a = (1 - (progress - 0.82) / 0.18) * maxAlpha;
+        a = Math.max(0, a);
+
+        // Thinner as they expand
+        const lw = LINE_WIDTH_BASE * (1 - progress * 0.55);
+
+        ctx.beginPath();
+        ctx.arc(cx, cy, Math.max(1, wave.r), 0, Math.PI * 2);
+        ctx.strokeStyle = waveColor(sceneRef.current, a);
+        ctx.lineWidth = lw;
+        ctx.stroke();
+      });
     }
+
+    initWaves();
     rafRef.current = requestAnimationFrame(loop);
 
-    const handleResize = () => initWaves();
-    window.addEventListener('resize', handleResize);
+    window.addEventListener('resize', initWaves);
     return () => {
       cancelAnimationFrame(rafRef.current);
-      window.removeEventListener('resize', handleResize);
+      window.removeEventListener('resize', initWaves);
     };
   }, []);
 

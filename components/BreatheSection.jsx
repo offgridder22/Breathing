@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import WaveCanvas from './WaveCanvas';
 import { sceneThemes } from './SceneThemes';
+import { IconExpand, IconClose } from './Icons';
 
 export default function BreatheSection({ scene, onToggleFullscreen, isFullscreen }) {
   const theme = sceneThemes[scene];
@@ -95,13 +96,13 @@ export default function BreatheSection({ scene, onToggleFullscreen, isFullscreen
 
   return (
     <section id="s-breathe">
-      <WaveCanvas scene={scene} />
+      <WaveCanvas scene={scene} phase={orbClass} />
       <button
         className="fullscreen-btn"
         onClick={onToggleFullscreen}
         title={isFullscreen ? 'Fermer' : 'Plein écran'}
       >
-        {isFullscreen ? '\u2715' : '\u26F6'}
+        {isFullscreen ? <IconClose /> : <IconExpand />}
       </button>
 
       <div className="breathe-center">
@@ -118,9 +119,6 @@ export default function BreatheSection({ scene, onToggleFullscreen, isFullscreen
 
         <div className="breathe-guide">
           <p>{guide}</p>
-          <button className="breathe-start-btn" onClick={toggleBreathing}>
-            {breathing ? 'Stop' : 'Start breathing'}
-          </button>
         </div>
       </div>
     </section>

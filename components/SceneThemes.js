@@ -46,7 +46,7 @@ export const sceneThemes = {
 };
 
 export const sceneConfigs = {
-  dawn:   { b1: 'rgba(160,210,220,0.25)', b2: 'rgba(220,200,170,0.2)',  accent: '#a85868', accentDark: '#7a3848' },
+  dawn:   { b1: 'rgba(160,210,220,0.25)', b2: 'rgba(220,200,170,0.2)',  accent: '#C5BD7E', accentDark: '#9a9050' },
   forest: { b1: 'rgba(100,180,120,0.25)', b2: 'rgba(140,190,130,0.2)',  accent: '#3d6b50', accentDark: '#2a5038' },
   ocean:  { b1: 'rgba(60,140,200,0.3)',   b2: 'rgba(80,160,210,0.2)',   accent: '#2a6090', accentDark: '#1a4870' },
   dusk:   { b1: 'rgba(220,140,80,0.25)',  b2: 'rgba(200,120,70,0.2)',   accent: '#b85a10', accentDark: '#904000' },
