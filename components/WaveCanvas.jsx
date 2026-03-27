@@ -4,7 +4,7 @@ import { useEffect, useRef } from 'react';
 
 const WAVE_COUNT = 9;
 const MAX_RADIUS_FACTOR = 0.78;
-const LINE_WIDTH_BASE = 0.4;
+const LINE_WIDTH_BASE = 0.5;
 
 // speed = px/frame at 30fps | alpha = max opacity | dir: +1 expand, -1 contract
 const PHASE_CONFIG = {
