@@ -20,27 +20,27 @@ import { IconSoundOn, IconSoundOff } from '../components/Icons';
 const SECTION_TONES = {
   dawn:   [
     [232, 220, 205,  0   ],  // hero    – transparent
-    [185, 205, 222,  0.20],  // breathe – cool blue-grey mist
-    [228, 212, 190,  0.18],  // journey – warm golden tone
-    [218, 192, 162,  0.28],  // close   – amber warmth
+    [185, 205, 222,  0.45],  // breathe – cool blue-grey mist
+    [228, 212, 190,  0.42],  // journey – warm golden tone
+    [218, 192, 162,  0.62],  // close   – amber warmth
   ],
   forest: [
-    [100, 140, 115,  0   ],
-    [ 50,  95,  68,  0.22],  // breathe – deep canopy
-    [ 78, 115,  72,  0.18],  // journey – mossy light
-    [ 92,  72,  48,  0.28],  // close   – warm earth
+    [ 88, 130, 100,  0   ],
+    [ 42,  88,  58,  0.44],  // breathe – sous-bois profond
+    [ 62, 105,  68,  0.38],  // journey – lumière filtrée
+    [ 38,  68,  44,  0.58],  // close   – nuit de forêt
   ],
   ocean:  [
     [ 75, 140, 200,  0   ],
-    [ 35,  82, 158,  0.22],  // breathe – deep water
-    [ 52, 118, 165,  0.18],  // journey – lighter surface
-    [ 62,  50, 112,  0.28],  // close   – twilight blue-violet
+    [ 30,  88, 165,  0.48],  // breathe – eau profonde
+    [ 45, 120, 170,  0.42],  // journey – surface lumineuse
+    [ 18,  68, 130,  0.62],  // close   – bleu nuit marin
   ],
   dusk:   [
     [210, 160,  90,  0   ],
-    [188, 112,  48,  0.22],  // breathe – deeper amber
-    [202, 138,  85,  0.18],  // journey – rose gold
-    [155,  82,  38,  0.30],  // close   – dark settling brown
+    [188, 112,  48,  0.48],  // breathe – deeper amber
+    [202, 138,  85,  0.42],  // journey – rose gold
+    [155,  82,  38,  0.65],  // close   – dark settling brown
   ],
 };
 

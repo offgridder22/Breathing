@@ -135,19 +135,28 @@ export default function WindyLandscape({ src, style, className, aspectRatio = 0,
     function resize() {
       const parent = canvas.parentElement;
       if (!parent) return;
-      const { width } = parent.getBoundingClientRect();
+      const rect = parent.getBoundingClientRect();
+      const { width } = rect;
       const dpr = Math.min(window.devicePixelRatio || 1, 2);
-      let aspect;
-      const dynamicAspect = 1.0 + Math.pow(Math.max(0, (width - 400) / 1600), 0.47) * 0.8;
+
       if (width < 1025) {
-        aspect = mobileAspectRatio === 0 ? dynamicAspect : mobileAspectRatio;
-      } else if (aspectRatio < 0) {
-        aspect = Math.abs(aspectRatio);
+        // Tablet/mobile: use the actual container height so the canvas
+        // pixel dimensions match the CSS-rendered size — no stretching.
+        const height = rect.height || Math.round(width / (mobileAspectRatio || 1));
+        canvas.width  = Math.round(width * dpr);
+        canvas.height = Math.round(height * dpr);
       } else {
-        aspect = 1.0 + Math.pow(Math.max(0, (width - 400) / 1600), 0.47) * 0.8 - aspectRatio;
+        // Desktop: derive height from aspect ratio
+        let aspect;
+        if (aspectRatio < 0) {
+          aspect = Math.abs(aspectRatio);
+        } else {
+          aspect = 1.0 + Math.pow(Math.max(0, (width - 400) / 1600), 0.47) * 0.8 - aspectRatio;
+        }
+        canvas.width  = Math.round(width * dpr);
+        canvas.height = Math.round(width * dpr / aspect);
       }
-      canvas.width  = Math.round(width * dpr);
-      canvas.height = Math.round(width * dpr / aspect);
+
       gl.viewport(0, 0, canvas.width, canvas.height);
       buildQuad();
     }
